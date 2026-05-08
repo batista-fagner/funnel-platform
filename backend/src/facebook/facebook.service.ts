@@ -50,6 +50,8 @@ export class FacebookService {
       ],
     };
 
+    this.logger.log(`[DEBUG CAPI] userData "${eventName}": ${JSON.stringify(userData)}`);
+
     try {
       await axios.post(
         `https://graph.facebook.com/v21.0/${pixelId}/events`,
