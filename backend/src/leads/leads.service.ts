@@ -74,6 +74,10 @@ export class LeadsService {
     return this.update(id, { status: 'convertido' });
   }
 
+  async delete(id: string): Promise<void> {
+    await this.leadsRepo.delete(id);
+  }
+
   async clearAll(): Promise<{ deleted: number }> {
     const result = await this.leadsRepo.createQueryBuilder().delete().from(Lead).execute();
     this.logger.warn(`Todos os ${result.affected} leads foram deletados`);

@@ -36,6 +36,12 @@ export class LeadsController {
     return lead;
   }
 
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    await this.leadsService.delete(id);
+    return { success: true };
+  }
+
   @Delete('__clear-all__')
   async clearAll() {
     return this.leadsService.clearAll();

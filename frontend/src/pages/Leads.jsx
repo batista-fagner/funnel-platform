@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Users, MessageCircle, Copy, CheckCircle2, Megaphone, X, Loader2,
   ExternalLink, Clock, MoreVertical, Send, Pencil, ChevronDown,
-  FileText, TrendingUp, User, ArrowDown,
+  FileText, TrendingUp, User, ArrowDown, Trash2,
 } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
@@ -82,6 +82,8 @@ export default function Leads() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [source, setSource] = useState('all')
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const DEMO_LEAD = {
     id: 'demo-lead-1',
@@ -209,6 +211,22 @@ export default function Leads() {
     }
   }
 
+  const deleteLead = async () => {
+    if (!selectedLead || selectedLead.id === 'demo-lead-1') return
+    setDeleting(true)
+    try {
+      const res = await fetch(`${API}/leads/${selectedLead.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setLeads(prev => prev.filter(l => l.id !== selectedLead.id))
+      setSelectedLead(null)
+      setDeleteConfirm(false)
+    } catch {
+      alert('Erro ao remover lead')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const openCreativeModal = async (adId) => {
     setCreativeModal({ adId, data: null, loading: true, error: null })
     try {
@@ -226,6 +244,37 @@ export default function Leads() {
 
   return (
     <div className="h-full flex flex-col p-6 bg-slate-50">
+
+      {/* Modal de confirmação de remoção */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 text-center">Remover lead?</h3>
+            <p className="text-sm text-slate-500 text-center mt-1">
+              <span className="font-semibold text-slate-700">{selectedLead?.name}</span> será removido permanentemente.
+            </p>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={deleteLead}
+                disabled={deleting}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-bold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {deleting ? 'Removendo...' : 'Remover'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal do Criativo */}
       {creativeModal && (
@@ -460,9 +509,15 @@ export default function Leads() {
                         {timeAgo(sel.createdAt).replace('há ', '')}
                       </p>
                     )}
-                    <button className="mt-3 p-1.5 hover:bg-white/10 rounded-lg transition">
-                      <MoreVertical className="w-4 h-4 text-slate-400" />
-                    </button>
+                    {sel.id !== 'demo-lead-1' && (
+                      <button
+                        onClick={() => setDeleteConfirm(true)}
+                        className="mt-3 p-1.5 hover:bg-red-500/20 rounded-lg transition group"
+                        title="Remover lead"
+                      >
+                        <Trash2 className="w-4 h-4 text-slate-400 group-hover:text-red-400" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
