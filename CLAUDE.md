@@ -193,16 +193,27 @@ Dashboard mostra todas as mensagens
 ```json
 {
   "name": "João Silva",
-  "email": "joao@email.com",
   "phone": "11999999999",
   "instagram": "joaosilva",
+  "revenue": "10k-30k",
   "fbclid": "IwAR...",
+  "fbc": "fb.1.1778264610786.IwAR...",
+  "fbp": "fb.1.1776713944686.322208632117177642",
+  "clickId": "uuid-gerado-automaticamente",
   "utmSource": "facebook",
   "utmMedium": "publico-frio",
   "utmCampaign": "janeiro-2025",
-  "utmContent": "ad-id-123"
+  "utmContent": "ad-id-123",
+  "userAgent": "Mozilla/5.0..."
 }
 ```
+
+**Tracking de anúncios — como configurar a URL no Meta Ads:**
+```
+URL de destino: https://leadscomia.vercel.app/
+Parâmetros:    utm_source=facebook&utm_medium=publico-frio&utm_campaign=lancamento-maio&utm_content=video-depoimento
+```
+O Meta adiciona `fbclid` automaticamente. O Pixel seta `_fbc` e `_fbp` nos cookies automaticamente.
 
 ### Status Geral
 **Implementado:**
@@ -262,6 +273,20 @@ Dashboard mostra todas as mensagens
   - leadscomia captura fbp do Meta Pixel cookie
   - Backend extrai clientIp de X-Forwarded-For header
   - Todos os parâmetros com hash adequado (fbc, em, ph, fn)
+- ✅ **Facebook CAPI: fix do cookie _fbc** (2026-05-08)
+  - Problema: `fbc` não estava sendo enviado ao Meta → nota de qualidade abaixo do esperado
+  - Fix: leadscomia captura cookie `_fbc` (setado pelo Meta Pixel quando vem de anúncio) e envia ao backend
+  - Backend prioriza o `_fbc` do browser (timestamp real do clique) sobre o `fbc` construído no servidor
+  - `fbc` adicionado ao `CaptureDto` no `forms.controller.ts`
+  - `sendLeadEvent` agora aceita `fbc` em extra e sobrescreve o construído a partir do fbclid
+  - Testado e validado em produção: `fbp` e `fbc` chegando no CAPI com IP real
+  - Nota esperada: 6.4/10 → 8-9/10
+- ✅ **Botão de remover lead com modal de confirmação** (2026-05-08)
+  - Ícone lixeira no canto superior direito do painel de detalhes do lead
+  - Abre modal de confirmação com nome do lead antes de deletar
+  - Endpoint `DELETE /leads/:id` adicionado no backend
+  - Lead é removido da lista após confirmação (sem precisar recarregar)
+  - Não aparece no lead demo (id = 'demo-lead-1')
 
 ### Integrações Instagram (app CRM-CLAUDE-IG)
 - **Token:** IGAAX — usa `graph.instagram.com` (NÃO `graph.facebook.com`)
@@ -511,4 +536,4 @@ agentMode = null          → Efraim padrão
 
 ---
 
-**Última atualização:** 2026-05-08 (Deploy produção Railway + Vercel ✅ | Proxy Instagram ✅ | Fix phone 9 extra ✅ | Modal animada leadscomia ✅ | Faturamento no board ✅)
+**Última atualização:** 2026-05-08 (Fix _fbc CAPI ✅ | Botão remover lead ✅ | Fix SPA routing Vercel ✅ | Deploy produção Railway + Vercel ✅)
