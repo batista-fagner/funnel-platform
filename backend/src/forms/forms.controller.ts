@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, Req, Logger } from '@nestjs/common';
+import { Controller, Post, Param, Body, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { FormsService } from './forms.service';
 
@@ -41,7 +41,6 @@ interface CaptureDto {
 
 @Controller('forms')
 export class FormsController {
-  private readonly logger = new Logger(FormsController.name);
   constructor(private formsService: FormsService) {}
 
   @Post()
@@ -57,7 +56,6 @@ export class FormsController {
   @Post('capture')
   async capture(@Body() body: CaptureDto, @Req() req: Request) {
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
-    this.logger.log(`[DEBUG capture] body recebido: ${JSON.stringify({ fbclid: body.fbclid, fbp: body.fbp, fbc: body.fbc, clickId: body.clickId })}`);
     return this.formsService.capture({ ...body, clientIp });
   }
 }
