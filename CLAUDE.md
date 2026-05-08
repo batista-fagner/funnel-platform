@@ -13,6 +13,13 @@ Ads (Meta) → VSL (vídeo + pixel) → Formulário → Scoring → Email Automa
 - Frontend: React 18 + Vite + shadcn/ui + Tailwind
 - Integrações: Meta Ads API, Resend (email), uazapi (WhatsApp), RapidAPI (Instagram)
 
+**Infraestrutura (Produção — 2026-05-08):**
+- Backend: Railway → `https://zippy-friendship-production-cee4.up.railway.app`
+- leadscomia: Vercel → `https://leadscomia.vercel.app`
+- Banco: Supabase PostgreSQL (já em nuvem)
+- Webhook uazapi: `.../api/webhooks/uazapi` (não `/webhooks/whatsapp`)
+- Redis: NÃO implementado — menção no CLAUDE.md era planejamento futuro
+
 ---
 
 ## 🏗️ Estrutura
@@ -241,6 +248,14 @@ Dashboard mostra todas as mensagens
   - Frontend: card "Follow-up com Stories" na página /leads com textarea editável + botão enviar
   - **RapidAPI fallback**: `/profile` → se 500 → tenta `/userInfo` automaticamente (backend e leadscomia)
   - leadscomia: `instagramApi.ts` também tem o mesmo fallback para o form da LP
+- ✅ **Deploy em produção (2026-05-08)**
+  - Backend no Railway (NestJS, porta dinâmica via `process.env.PORT`)
+  - leadscomia no Vercel
+  - Endpoint proxy `POST /api/instagram/profile` — leadscomia chama backend em vez de RapidAPI diretamente (evita CORS)
+  - Fix phone: Efraim normaliza 6 variantes (com/sem DDI 55, com/sem 9 extra) — `efraim.controller.ts`
+  - Faturamento (`revenueRange`) exibido na seção "Sobre o Lead" na página `/leads` com badge colorido
+  - Modal animada de análise no leadscomia com 4 etapas progressivas (`LeadForm.tsx`)
+  - Bullet "armadilha da indicação" adicionado na seção "O que você vai descobrir" em `Result.tsx`
 - ✅ **Facebook CAPI: Qualidade do evento aprimorada** (2026-04-24)
   - Novos parâmetros: fbp (cookie _fbp), external_id (lead UUID), client_ip_address, client_user_agent
   - Nota esperada: 6.9/10 → 8-9/10
@@ -466,6 +481,8 @@ agentMode = null          → Efraim padrão
 - [ ] **Otimizar prompt do follow-up de vídeo (Efraim)** — método `generateVideoFollowup()` em `efraim.service.ts`; ajustar tom, exemplo de nicho e CTA de confirmação para o evento
 - [ ] **Integração Kiwify webhook** — POST /api/checkout/webhook pra marcar convertido via checkout
 - [ ] **Kanban board visual** — opcional, usa waStage para mostrar progresso dos leads
+- [ ] **Agente Pós-Imersão** — segundo agente WhatsApp com prompt de reengajamento; quando lead responde follow-up de stories, roteamento por `agentMode` no lead
+- [ ] **Reduzir imagem Docker** — trocar `puppeteer` por `puppeteer-core` + `@sparticuz/chromium` (~50MB vs 577MB atual)
 - [x] **Copy da landing page leadscomia (página inicial)** — ✅ CONCLUÍDO em 2026-04-26
   - `HeroContent.tsx`: título, subtítulo (em negrito) e bullets atualizados
   - `LeadForm.tsx`: título do box, subtítulo, botão e rodapé atualizados
@@ -494,4 +511,4 @@ agentMode = null          → Efraim padrão
 
 ---
 
-**Última atualização:** 2026-05-02 (Meta Pixel leadscomia ✅ | UX/copy leadscomia ✅ | Follow-up Stories + Visão ✅ | Fallback RapidAPI ✅)
+**Última atualização:** 2026-05-08 (Deploy produção Railway + Vercel ✅ | Proxy Instagram ✅ | Fix phone 9 extra ✅ | Modal animada leadscomia ✅ | Faturamento no board ✅)
