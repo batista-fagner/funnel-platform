@@ -1,0 +1,73 @@
+  ______________________________
+  PROFILE
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/profile \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"instagram"}' 
+
+  ______________________________
+  STORIES
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/stories \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"instagram"}'
+
+
+  ______________________________
+  USERINFO
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/userInfo \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"instagram"}'
+
+  ______________________________
+  REELS
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/reels \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"keke","maxId":""}'
+
+
+  _______________________________
+  POST
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/posts \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"keke","maxId":""}'
+
+
+  _______________________________
+  HIGHLIGHT STORIES
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/highlightStories \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"highlightId":"highlight:17936913893330057"}'
+
+  _______________________________
+  HIGHLIGHTS
+
+  curl --request POST \
+	--url https://instagram120.p.rapidapi.com/api/instagram/highlights \
+	--header 'Content-Type: application/json' \
+	--header 'x-rapidapi-host: instagram120.p.rapidapi.com' \
+	--header 'x-rapidapi-key: 71a98b7aa1msh1dc97e79104f9e0p11519ajsn611e441ae88a' \
+	--data '{"username":"instagram"}'
+
