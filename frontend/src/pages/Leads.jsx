@@ -723,6 +723,18 @@ export default function Leads() {
                           <p className="text-sm text-slate-600">Origem</p>
                           <p className="text-sm font-semibold text-slate-800">{getLeadOrigin(sel)}</p>
                         </div>
+                        {sel.revenueRange && (
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-slate-600">Faturamento</p>
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
+                              sel.revenueRange.includes('30 mil') || sel.revenueRange.includes('100k') ? 'bg-emerald-100 text-emerald-700'
+                              : sel.revenueRange.includes('10k') || sel.revenueRange.includes('10 mil') ? 'bg-amber-100 text-amber-700'
+                              : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {sel.revenueRange}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between">
                           <p className="text-sm text-slate-600">Status atual</p>
                           <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${statusCfg.className}`}>
