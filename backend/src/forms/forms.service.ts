@@ -49,7 +49,7 @@ export class FormsService {
     return this.formsRepo.save(form);
   }
 
-  async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
+  async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; fbc?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
     const lead = await this.leadsService.create({
       name: dto.name,
       phone: dto.phone,
@@ -72,7 +72,7 @@ export class FormsService {
       );
     }
 
-    this.facebookService.sendLeadEvent(lead, { fbp: dto.fbp, userAgent: dto.userAgent, clientIp: dto.clientIp }).catch(err =>
+    this.facebookService.sendLeadEvent(lead, { fbp: dto.fbp, fbc: dto.fbc, userAgent: dto.userAgent, clientIp: dto.clientIp }).catch(err =>
       this.logger.error(`Erro ao enviar Lead event ao Facebook: ${err.message}`),
     );
 
