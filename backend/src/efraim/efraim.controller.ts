@@ -84,10 +84,18 @@ export class EfraimController {
   }
 
   private async processMessage(phone: string, text: string) {
-    // Tenta com e sem DDI 55
-    const phoneVariants = phone.startsWith('55')
-      ? [phone, phone.slice(2)]
-      : [phone, `55${phone}`];
+    // Normaliza variantes com/sem DDI 55 e com/sem o 9 extra (Brasil)
+    const addNine = (n: string) => n.length === 10 ? `${n.slice(0, 2)}9${n.slice(2)}` : n;
+    const removeNine = (n: string) => n.length === 11 && n[2] === '9' ? `${n.slice(0, 2)}${n.slice(3)}` : n;
+    const base = phone.startsWith('55') ? phone.slice(2) : phone;
+    const phoneVariants = [
+      `55${base}`,
+      base,
+      `55${addNine(base)}`,
+      addNine(base),
+      `55${removeNine(base)}`,
+      removeNine(base),
+    ];
     let lead: Lead | null = null;
     for (const p of phoneVariants) {
       lead = await this.leadsService.findByPhone(p);
