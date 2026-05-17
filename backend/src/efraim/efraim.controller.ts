@@ -2,6 +2,7 @@ import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { EfraimService } from './efraim.service';
 import { LeadsService } from '../leads/leads.service';
 import { Lead, WaStage } from '../common/entities/lead.entity';
@@ -13,8 +14,9 @@ export class EfraimController {
   private readonly pendingBuffer = new Map<string, { timer: NodeJS.Timeout; texts: string[] }>();
   private readonly uazapiBaseUrl: string;
   private readonly uazapiToken: string;
-
   private readonly eventDate: string;
+  private readonly supabase: SupabaseClient;
+  private readonly mediaBucket: string;
 
   constructor(
     private readonly efraimService: EfraimService,
@@ -25,6 +27,11 @@ export class EfraimController {
     this.uazapiBaseUrl = config.get('UAZAPI_BASE_URL') || 'https://free.uazapi.com';
     this.uazapiToken = config.get('UAZAPI_TOKEN') || '';
     this.eventDate = config.get('EFRAIM_EVENT_DATE') || 'terça às 20h';
+    this.supabase = createClient(
+      config.get('SUPABASE_URL') ?? '',
+      config.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+    this.mediaBucket = config.get('EFRAIM_MEDIA_BUCKET') ?? 'efraim-media';
   }
 
   @Post('uazapi')
@@ -142,8 +149,16 @@ export class EfraimController {
     // Envia resposta via uazapi (silencioso se erro)
     if (aiResponse.reply) await this.sendMessage(phone, aiResponse.reply);
 
-    // Se entrou no stage "video" pela primeira vez, envia follow-up automático
+    // Se entrou no stage "video" pela primeira vez, envia vídeo + follow-up automático
     if (aiResponse.stage === 'video' && previousStage !== 'video') {
+      // Envia o vídeo imediatamente após a resposta de texto
+      const videoUrl = await this.getVideoUrl('video-whatsapp');
+      if (videoUrl) {
+        await this.sendVideo(phone, videoUrl);
+      } else {
+        this.logger.warn(`Vídeo "video-whatsapp" não encontrado no bucket ${this.mediaBucket}`);
+      }
+
       setTimeout(async () => {
         try {
           await this.sendTyping(phone, 3000);
@@ -155,6 +170,44 @@ export class EfraimController {
           this.logger.error(`Erro no follow-up de vídeo: ${err.message}`);
         }
       }, 5000);
+    }
+  }
+
+  private async getVideoUrl(name: string): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase.storage
+        .from(this.mediaBucket)
+        .list('', { search: name });
+
+      if (error || !data?.length) return null;
+
+      const file = data.find(f => f.name.startsWith(name));
+      if (!file) return null;
+
+      const { data: urlData } = this.supabase.storage
+        .from(this.mediaBucket)
+        .getPublicUrl(file.name);
+
+      return urlData.publicUrl;
+    } catch (err: any) {
+      this.logger.error(`Erro ao buscar vídeo "${name}": ${err.message}`);
+      return null;
+    }
+  }
+
+  private async sendVideo(phone: string, videoUrl: string) {
+    try {
+      const normalizedPhone = phone.startsWith('55') ? phone : `55${phone}`;
+      await firstValueFrom(
+        this.http.post(
+          `${this.uazapiBaseUrl}/send/media`,
+          { number: normalizedPhone, file: videoUrl, type: 'video', text: '', delay: 1000 },
+          { headers: { token: this.uazapiToken } },
+        ),
+      );
+      this.logger.log(`Vídeo enviado para ${phone}`);
+    } catch (err: any) {
+      this.logger.error(`Erro ao enviar vídeo para ${phone}: ${err.message}`);
     }
   }
 
