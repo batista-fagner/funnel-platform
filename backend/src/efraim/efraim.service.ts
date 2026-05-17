@@ -120,6 +120,7 @@ export class EfraimService {
         messages,
         temperature: 0.7,
         max_completion_tokens: 300,
+        response_format: { type: 'json_object' },
       });
 
       let raw = response.choices[0].message.content?.trim() ?? '';
