@@ -5,6 +5,7 @@ import { Form } from '../common/entities/form.entity';
 import { LeadsService } from '../leads/leads.service';
 import { EnrichmentService } from '../enrichment/enrichment.service';
 import { FacebookService } from '../facebook/facebook.service';
+import { MessagingService } from '../messaging/messaging.service';
 import { ScoringEngine, FormResponses } from './scoring.engine';
 
 interface SubmitFormDto {
@@ -31,6 +32,7 @@ export class FormsService {
     private leadsService: LeadsService,
     private enrichmentService: EnrichmentService,
     private facebookService: FacebookService,
+    private messagingService: MessagingService,
   ) {}
 
   async findById(id: string): Promise<Form> {
@@ -71,6 +73,13 @@ export class FormsService {
       this.enrichmentService.enrichLeadFromInstagram(lead.id).catch(err =>
         this.logger.error(`Erro ao enriquecer lead capturado: ${err.message}`),
       );
+    } else {
+      // Sem Instagram: envia mensagem baseada no faturamento após 8s
+      setTimeout(() => {
+        this.sendRevenueMessage(lead.id, lead.name, dto.revenue).catch(err =>
+          this.logger.error(`Erro ao enviar msg de faturamento para ${lead.id}: ${err.message}`),
+        );
+      }, 8000);
     }
 
     this.facebookService.sendLeadEvent(lead, { fbp: dto.fbp, fbc: dto.fbc, userAgent: dto.userAgent, clientIp: dto.clientIp }).catch(err =>
@@ -79,6 +88,23 @@ export class FormsService {
 
     this.logger.log(`Lead capturado via leadscomia: ${lead.id} - ${lead.name}`);
     return { success: true, leadId: lead.id };
+  }
+
+  private async sendRevenueMessage(leadId: string, name: string, revenue?: string): Promise<void> {
+    const firstName = name.split(' ')[0];
+
+    const messages: Record<string, string> = {
+      'ate-10k': `${firstName}! parabéns por dar esse passo\nme fala o nome da sua empresa e qual é sua maior dificuldade pra sair desse platô de 10 mil?`,
+      '10k-30k': `${firstName}! faturando entre 10 e 30 mil já tem estrutura\nme conta o que tá travando você de chegar nos 100 mil?`,
+      '30k-100k': `${firstName}! negócio sólido esse seu, entre 30 e 100 mil já prova que funciona\nme fala qual é seu maior gargalo hoje pra escalar?`,
+      '100k-300k': `${firstName}! negócio de 6 dígitos, isso é sério\nme conta o que tá travando você de chegar nos 7 dígitos?`,
+      'acima-300k': `${firstName}! que máquina de negócio\ncom esse faturamento a questão não é crescer, é escalar sem travar o processo\nme conta qual é o maior gargalo hoje?`,
+    };
+
+    const text = messages[revenue || ''] || `${firstName}! vi que você se cadastrou\nme conta o nome da sua empresa e qual é sua maior dificuldade hoje pra crescer?`;
+
+    await this.messagingService.sendMessage({ leadId, text });
+    this.logger.log(`Mensagem de faturamento enviada para lead ${leadId} (${revenue || 'sem faturamento'})`);
   }
 
   async submit(formId: string, dto: SubmitFormDto): Promise<{ success: boolean; leadId: string }> {

@@ -4,11 +4,12 @@ import { Form } from '../common/entities/form.entity';
 import { LeadsModule } from '../leads/leads.module';
 import { EnrichmentModule } from '../enrichment/enrichment.module';
 import { FacebookModule } from '../facebook/facebook.module';
+import { MessagingModule } from '../messaging/messaging.module';
 import { FormsService } from './forms.service';
 import { FormsController } from './forms.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Form]), LeadsModule, EnrichmentModule, FacebookModule],
+  imports: [TypeOrmModule.forFeature([Form]), LeadsModule, EnrichmentModule, FacebookModule, MessagingModule],
   providers: [FormsService],
   controllers: [FormsController],
 })
