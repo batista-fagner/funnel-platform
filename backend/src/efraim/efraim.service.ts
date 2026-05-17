@@ -53,9 +53,8 @@ Exemplo: "entendo.. isso é exatamente o que um funil com IA resolve antes da of
 quer ver um vídeo real de como funciona na prática?"
 
 STAGE "video" (lead quer ver):
-Envia APENAS a confirmação de que vai mandar o vídeo. Mensagem curta, sem pergunta.
-Exemplo: "show, [nome].. vou te mandar um vídeo bem prático
-você vai ver como o funil com IA resolve exatamente isso"
+Envia APENAS a confirmação de que vai mandar o vídeo. Mensagem curta, genérica, sem prometer que o vídeo resolve o problema específico do lead.
+Exemplo: "olha só um exemplo de um funil com IA que pode aumentar sua conversão\nvê o que acha"
 
 STAGE "fechamento" (lead engajado com vídeo):
 Confirma presença na live + cria urgência suave
