@@ -50,9 +50,10 @@ export class FormsService {
   }
 
   async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; fbc?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
+    const normalizedPhone = (dto.phone || '').replace(/\D/g, '');
     const lead = await this.leadsService.create({
       name: dto.name,
-      phone: dto.phone,
+      phone: normalizedPhone,
       email: dto.email || undefined,
       instagram: dto.instagram,
       status: 'novo',
@@ -91,7 +92,7 @@ export class FormsService {
       campaignId: formId,
       name: dto.name,
       email: dto.email,
-      phone: dto.phone,
+      phone: (dto.phone || '').replace(/\D/g, ''),
       instagram: dto.instagram,
       score,
       classification,
