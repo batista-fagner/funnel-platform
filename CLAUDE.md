@@ -288,6 +288,10 @@ O Meta adiciona `fbclid` automaticamente. O Pixel seta `_fbc` e `_fbp` nos cooki
   - Lead é removido da lista após confirmação (sem precisar recarregar)
   - Não aparece no lead demo (id = 'demo-lead-1')
 
+
+##  Obs:
+O front end desse projeto esta rodando local, logo a aprte do follow-up com stories, logo é necessario rodar o projeto local pra funcionar as features. O deploy em produção é apenas para a landing page leadscomia, que já está usando o backend hospedado no Railway.
+
 ### Integrações Instagram (app CRM-CLAUDE-IG)
 - **Token:** IGAAX — usa `graph.instagram.com` (NÃO `graph.facebook.com`)
 - **IG_USER_ID:** 26565250533125084
@@ -504,6 +508,12 @@ agentMode = null          → Efraim padrão
 - [x] **Melhorar qualidade evento Facebook** — ✅ CONCLUÍDO em 2026-04-24 (6.9 → 8-9/10)
 - [ ] **Renovar token uazapi** — temporário (1h), precisa gerar novo quando expirar
 - [ ] **Otimizar prompt do follow-up de vídeo (Efraim)** — método `generateVideoFollowup()` em `efraim.service.ts`; ajustar tom, exemplo de nicho e CTA de confirmação para o evento
+- [x] **Humanizar mensagens de faturamento (Efraim)** — ✅ CONCLUÍDO em 2026-05-18
+  - Todas as faixas abrem com "Fala {nome}... Efraim aqui da equipe do Fagner"
+  - Cada faixa tem insight específico da dor antes de perguntar
+  - 100k-300k conecta com funil estruturado como alavanca de crescimento
+  - Stage "video" do Efraim agora usa mensagem genérica (sem prometer resolver o problema específico do lead)
+  - Arquivo: `backend/src/forms/forms.service.ts` método `sendRevenueMessage()`
 - [ ] **Integração Kiwify webhook** — POST /api/checkout/webhook pra marcar convertido via checkout
 - [ ] **Kanban board visual** — opcional, usa waStage para mostrar progresso dos leads
 - [ ] **Agente Pós-Imersão** — segundo agente WhatsApp com prompt de reengajamento; quando lead responde follow-up de stories, roteamento por `agentMode` no lead
@@ -536,4 +546,79 @@ agentMode = null          → Efraim padrão
 
 ---
 
-**Última atualização:** 2026-05-08 (Fix _fbc CAPI ✅ | Botão remover lead ✅ | Fix SPA routing Vercel ✅ | Deploy produção Railway + Vercel ✅)
+## 🔌 ConvertIQ — Chrome Extension Social Selling (2026-05-13)
+
+**Projeto separado:** `/Users/fagnerbatista/Documents/planningPsi/convertiq-extension/`
+**Plano completo:** `/Users/fagnerbatista/Documents/planningPsi/CONVERTIQ_PLAN.md`
+**Status:** Localhost (ainda não publicado na Chrome Web Store)
+
+### O que é
+Extensão Chrome para automação de social selling no Instagram. Side Panel fixo na lateral do browser. Captura e analisa seguidores automaticamente, salvando no pipeline para aquecimento e DM.
+
+### Stack
+- Chrome Extension Manifest V3
+- TypeScript + React 18 + Vite + `@crxjs/vite-plugin`
+- Tailwind CSS + Zustand
+- `chrome.storage.local` (persistência local)
+- `chrome.alarms` (ciclo a cada 1 min)
+- Content script injeta no Instagram
+
+### Arquitetura de comunicação
+```
+Side Panel (React UI)
+    ↕  chrome.runtime.connect() [long-lived port]
+Background Service Worker
+    ↕  chrome.tabs.sendMessage()
+Content Script (instagram.com)
+```
+
+### ✅ Implementado (Passo 1 + Passo 2 — base)
+- Side Panel fixo na lateral do Chrome com log ao vivo
+- Status badge (Rodando / Pausado) com dot animado
+- Stats bar: Qualificados / Descartados / Erros
+- Tabs: Log ao Vivo | Pipeline
+- Pipeline board mostrando perfis com: username, nome, bio, seguidores, posts, stories
+- Background service worker com `chrome.alarms` (1 min)
+- **Captura real de seguidores do `@fbatistaz`:**
+  - Navega para o perfil automaticamente
+  - Clica no link "seguidores" para abrir o modal (MouseEvent real para React)
+  - Scroll com detecção de elemento rolável via `computedStyle` + dispara evento `scroll` para lista virtualizada do Instagram
+  - Captura até 50 usernames novos por ciclo
+  - Para cada seguidor: entra no perfil, extrai bio/seguidores/posts/stories/privacidade
+  - QUALIF = conta aberta | FORA = conta privada
+  - Não reprocessa perfis já analisados (persiste em `chrome.storage.local`)
+- Botão Pausar interrompe o ciclo imediatamente
+- Logs de debug `[ConvertIQ]` no console do Instagram para diagnóstico
+
+### Como rodar (desenvolvimento)
+```bash
+cd /Users/fagnerbatista/Documents/planningPsi/convertiq-extension
+npm run build        # build único
+npm run dev          # watch mode (rebuild automático)
+```
+Carregar no Chrome: `chrome://extensions` → Modo desenvolvedor → "Carregar sem compactação" → pasta `dist/`
+
+### ⚠️ Pendências ConvertIQ
+
+| Passo | Feature | Descrição |
+|-------|---------|-----------|
+| 3 | **Qualificação ICP via IA** | GPT-4o-mini lê bio + nome e classifica como ICP ou não, com prompt customizável |
+| 4 | **Ações de aquecimento** | Curtir post recente, ver story — simula comportamento humano |
+| 5 | **DM automático** | Envia DM com template personalizável para perfis QUALIF |
+| 6 | **Pipeline Kanban visual** | Arrastar entre stages (QUALIF / PROCESSO / FORA / ERRO) |
+| 7 | **"Precisam de você"** | Fila de ações que precisam aprovação manual antes de executar |
+| 8 | **Integração fisio-secretary** | Sync de leads qualificados para backend via JWT/API Key |
+| 9 | **Publicar na Chrome Web Store** | Empacotar e publicar para uso além do localhost |
+| 10 | **Prospecção ativa** | Buscar seguidores de outros perfis (não só quem segue @fbatistaz) |
+
+### Notas técnicas importantes
+- Instagram usa lista virtualizada → precisa `dispatchEvent(new Event('scroll'))` após `scrollTop +=`
+- O clique no link de seguidores precisa de `MouseEvent` real (mousedown + mouseup + click) pois Instagram usa React
+- `chrome.tabs.query({ url: 'https://www.instagram.com/*' })` encontra a aba ativa do usuário — NÃO abre nova aba
+- Delays aleatórios 4-8s entre perfis + 1.2-1.8s entre scrolls para simular humano
+- Todo o fluxo atual é **zero custo de API** — só scraping DOM
+- Custo de IA entra apenas no Passo 3 (~$0.0001 por perfil com GPT-4o-mini)
+
+---
+
+**Última atualização:** 2026-05-13 (ConvertIQ Chrome Extension — Passos 1+2 funcionando ✅ | Captura real de seguidores @fbatistaz ✅)
