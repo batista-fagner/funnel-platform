@@ -94,14 +94,14 @@ export class FormsService {
     const firstName = name.split(' ')[0];
 
     const messages: Record<string, string> = {
-      'ate-10k': `${firstName}! parabéns por dar esse passo\nme fala o nome da sua empresa e qual é sua maior dificuldade pra sair desse platô de 10 mil?`,
-      '10k-30k': `${firstName}! faturando entre 10 e 30 mil já tem estrutura\nme conta o que tá travando você de chegar nos 100 mil?`,
-      '30k-100k': `${firstName}! negócio sólido esse seu, entre 30 e 100 mil já prova que funciona\nme fala qual é seu maior gargalo hoje pra escalar?`,
-      '100k-300k': `${firstName}! negócio de 6 dígitos, isso é sério\nme conta o que tá travando você de chegar nos 7 dígitos?`,
-      'acima-300k': `${firstName}! que máquina de negócio\ncom esse faturamento a questão não é crescer, é escalar sem travar o processo\nme conta qual é o maior gargalo hoje?`,
+      'ate-10k': `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc se cadastrou...\naté 10k é a fase mais difícil — o negócio ainda tá sendo construído\nme conta qual é o maior obstáculo hoje pra fechar mais clientes?`,
+      '10k-30k': `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc tá crescendo...\nentre 10 e 30k já prova que tem algo que funciona — agora é consistência\no que tá impedindo você de ter meses previsíveis acima disso?`,
+      '30k-100k': `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc tem um faturamento interessante...\nentre 30 e 100k já prova que funciona — a questão agora é escala\no que tá travando você de passar desse patamar?`,
+      '100k-300k': `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc tem um negócio de 6 dígitos...\nnessa faixa a maioria tá deixando dinheiro na mesa por não ter um funil que capta e aquece no automático\nme conta como é sua aquisição hoje?`,
+      'acima-300k': `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc tem uma operação robusta...\nquem chega em 300k+ o desafio não é crescer, é escalar sem quebrar o que funciona\nme fala qual é o maior desafio estratégico hoje?`,
     };
 
-    const text = messages[revenue || ''] || `${firstName}! vi que você se cadastrou\nme conta o nome da sua empresa e qual é sua maior dificuldade hoje pra crescer?`;
+    const text = messages[revenue || ''] || `Fala ${firstName}... Efraim aqui da equipe do Fagner\nVi que vc se cadastrou...\nme conta o nome da sua empresa e qual é sua maior dificuldade hoje pra crescer?`;
 
     await this.messagingService.sendMessage({ leadId, text });
     this.logger.log(`Mensagem de faturamento enviada para lead ${leadId} (${revenue || 'sem faturamento'})`);
