@@ -506,7 +506,6 @@ agentMode = null          → Efraim padrão
 - [x] **Renovar IG_TOKEN (IGAAX) para 60 dias** — ✅ CONCLUÍDO em 2026-04-20
 - [x] **Implementar Efraim (agente WhatsApp)** — ✅ CONCLUÍDO em 2026-04-24
 - [x] **Melhorar qualidade evento Facebook** — ✅ CONCLUÍDO em 2026-04-24 (6.9 → 8-9/10)
-- [ ] **Renovar token uazapi** — temporário (1h), precisa gerar novo quando expirar
 - [ ] **Otimizar prompt do follow-up de vídeo (Efraim)** — método `generateVideoFollowup()` em `efraim.service.ts`; ajustar tom, exemplo de nicho e CTA de confirmação para o evento
 - [x] **Humanizar mensagens de faturamento (Efraim)** — ✅ CONCLUÍDO em 2026-05-18
   - Todas as faixas abrem com "Fala {nome}... Efraim aqui da equipe do Fagner"
