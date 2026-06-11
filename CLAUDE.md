@@ -281,6 +281,16 @@ O Meta adiciona `fbclid` automaticamente. O Pixel seta `_fbc` e `_fbp` nos cooki
   - `sendLeadEvent` agora aceita `fbc` em extra e sobrescreve o construído a partir do fbclid
   - Testado e validado em produção: `fbp` e `fbc` chegando no CAPI com IP real
   - Nota esperada: 6.4/10 → 8-9/10
+- ✅ **Evento CAPI personalizado MQL** (2026-06-11)
+  - Dispara evento `MQL` ao Meta para leads com faturamento 30k+ (`30k-100k`, `100k-300k`, `acima-300k`)
+  - Evento `Lead` continua sendo disparado normalmente para todos os leads
+  - Novo método `sendMqlEvent()` em `facebook.service.ts` com mesmos parâmetros de qualidade do `sendLeadEvent`
+  - Condicional no `forms.service.ts` método `capture()` — verifica `MQL_REVENUES` após salvar lead
+  - `event_source_url: "https://leadscomia.vercel.app/"` adicionado ao payload MQL para ativar conversão personalizada no Meta
+  - Conversão personalizada **MQL-L** criada no Gerenciador de Eventos (pixel-funnel-IA) — Status: Ativo
+  - Objetivo: otimizar campanhas Meta por leads qualificados em vez de leads genéricos
+  - Nota de qualidade atual: 5.0/10 (sobe com leads reais de anúncios que trazem fbp + fbc)
+
 - ✅ **Botão de remover lead com modal de confirmação** (2026-05-08)
   - Ícone lixeira no canto superior direito do painel de detalhes do lead
   - Abre modal de confirmação com nome do lead antes de deletar
