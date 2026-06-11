@@ -29,7 +29,7 @@ export class FacebookService {
     return userData;
   }
 
-  private async sendEvent(eventName: string, userData: Record<string, string>, customData?: Record<string, any>): Promise<void> {
+  private async sendEvent(eventName: string, userData: Record<string, string>, customData?: Record<string, any>, eventSourceUrl?: string): Promise<void> {
     const pixelId = this.config.get('FB_PIXEL_ID');
     const accessToken = this.config.get('FB_ACCESS_TOKEN');
 
@@ -45,6 +45,7 @@ export class FacebookService {
           event_time: Math.floor(Date.now() / 1000),
           action_source: 'website',
           user_data: userData,
+          ...(eventSourceUrl ? { event_source_url: eventSourceUrl } : {}),
           ...(customData ? { custom_data: customData } : {}),
         },
       ],
@@ -123,6 +124,6 @@ export class FacebookService {
     if (extra?.fbc) userData['fbc'] = extra.fbc;
     if (extra?.clientIp) userData['client_ip_address'] = extra.clientIp;
     if (extra?.userAgent) userData['client_user_agent'] = extra.userAgent;
-    await this.sendEvent('MQL', userData);
+    await this.sendEvent('MQL', userData, undefined, 'https://leadscomia.vercel.app/');
   }
 }
