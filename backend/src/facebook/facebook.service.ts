@@ -116,4 +116,13 @@ export class FacebookService {
     const userData = this.buildUserData(lead);
     await this.sendEvent('Purchase', userData, { value, currency: 'BRL' });
   }
+
+  async sendMqlEvent(lead: Lead, extra?: { fbp?: string; fbc?: string; userAgent?: string; clientIp?: string }): Promise<void> {
+    const userData = this.buildUserData(lead);
+    if (extra?.fbp) userData['fbp'] = extra.fbp;
+    if (extra?.fbc) userData['fbc'] = extra.fbc;
+    if (extra?.clientIp) userData['client_ip_address'] = extra.clientIp;
+    if (extra?.userAgent) userData['client_user_agent'] = extra.userAgent;
+    await this.sendEvent('MQL', userData);
+  }
 }

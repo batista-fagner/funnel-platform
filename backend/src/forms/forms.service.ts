@@ -86,6 +86,15 @@ export class FormsService {
       this.logger.error(`Erro ao enviar Lead event ao Facebook: ${err.message}`),
     );
 
+    this.logger.debug(`Revenue recebido: "${dto.revenue}"`);
+    const MQL_REVENUES = ['30k-100k', '100k-300k', 'acima-300k'];
+    if (dto.revenue && MQL_REVENUES.includes(dto.revenue)) {
+      this.logger.log(`🎯 MQL detectado! Enviando evento MQL para lead ${lead.id}`);
+      this.facebookService.sendMqlEvent(lead, { fbp: dto.fbp, fbc: dto.fbc, userAgent: dto.userAgent, clientIp: dto.clientIp }).catch(err =>
+        this.logger.error(`Erro ao enviar MQL event ao Facebook: ${err.message}`),
+      );
+    }
+
     this.logger.log(`Lead capturado via leadscomia: ${lead.id} - ${lead.name}`);
     return { success: true, leadId: lead.id };
   }
