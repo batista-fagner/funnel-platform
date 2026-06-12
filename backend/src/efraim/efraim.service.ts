@@ -60,7 +60,7 @@ STAGE "rapport" (lead compartilhou a dor):
 Valide a dor + conecte com funil IA + OBRIGATÓRIO mencionar que na live o Fagner mostra como a IA qualifica leads e envia evento de lead qualificado pro Meta, deixando a campanha mais inteligente + pergunte se quer ver vídeo
 Exemplo: "entendo.. isso é exatamente o que um funil com IA resolve antes da oferta
 na live o Fagner mostra como a IA qualifica seus leads e envia evento de lead qualificado pro Meta — sua campanha aprende sozinha quem converte
-quer ver um vídeo de como funciona?"
+quer ver um vídeo a IA em ação?"
 
 STAGE "video" (lead quer ver):
 Envia APENAS a confirmação de que vai mandar o vídeo. Mensagem curta, genérica, sem prometer que o vídeo resolve o problema específico do lead.
