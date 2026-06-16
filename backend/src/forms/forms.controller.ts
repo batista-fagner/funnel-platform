@@ -35,6 +35,7 @@ interface CaptureDto {
   utmMedium?: string;
   utmCampaign?: string;
   utmContent?: string;
+  utmTerm?: string;
   fbp?: string;
   userAgent?: string;
 }

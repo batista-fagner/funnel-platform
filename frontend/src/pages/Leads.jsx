@@ -55,7 +55,7 @@ function formatPhone(phone) {
 
 function getLeadOrigin(lead) {
   if (lead.utmSource === 'instagram' && lead.utmMedium === 'dm-automation') return 'Instagram DM'
-  if (lead.fbclid || ['facebook', 'leadscomia'].includes(lead.utmSource)) return 'Tráfego Pago'
+  if (lead.fbclid || ['facebook', 'meta', 'facebookads', 'leadscomia'].includes(lead.utmSource)) return 'Tráfego Pago'
   return 'Direto'
 }
 
@@ -709,6 +709,12 @@ export default function Leads() {
                             <div>
                               <p className="text-[11px] text-slate-400 mb-0.5">Conjunto</p>
                               <p className="text-sm font-semibold text-slate-800">{sel.utmMedium}</p>
+                            </div>
+                          )}
+                          {sel.utmTerm && (
+                            <div>
+                              <p className="text-[11px] text-slate-400 mb-0.5">ID do Conjunto</p>
+                              <p className="text-sm font-semibold text-slate-800">{sel.utmTerm}</p>
                             </div>
                           )}
                           <div>

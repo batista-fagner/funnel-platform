@@ -51,7 +51,7 @@ export class FormsService {
     return this.formsRepo.save(form);
   }
 
-  async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; fbc?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
+  async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; fbc?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; utmTerm?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
     const normalizedPhone = (dto.phone || '').replace(/\D/g, '');
     const lead = await this.leadsService.create({
       name: dto.name,
@@ -64,6 +64,7 @@ export class FormsService {
       utmMedium: dto.utmMedium,
       utmCampaign: dto.utmCampaign,
       utmContent: dto.utmContent,
+      utmTerm: dto.utmTerm,
       fbclid: dto.fbclid,
       clickId: dto.clickId,
       revenueRange: dto.revenue,

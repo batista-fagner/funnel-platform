@@ -66,6 +66,9 @@ export class Lead {
   @Column({ name: 'utm_content', type: 'varchar', nullable: true })
   utmContent?: string;
 
+  @Column({ name: 'utm_term', type: 'varchar', nullable: true })
+  utmTerm?: string;
+
   @Column({ name: 'fbclid', type: 'varchar', nullable: true })
   fbclid?: string;
 
