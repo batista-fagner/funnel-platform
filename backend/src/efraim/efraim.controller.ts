@@ -50,9 +50,6 @@ export class EfraimController {
     const messageId: string = message.messageid ?? '';
     const isAudio = message.type === 'media' && ['audio', 'ptt', 'myaudio'].includes(message.mediaType);
 
-    // DEBUG TEMPORÁRIO — remover após validar
-    this.logger.log(`[DEBUG] type=${message.type} mediaType=${message.mediaType} messageType=${message.messageType} isAudio=${isAudio} text="${text}" messageId=${messageId}`);
-
     if (!phone) return { ok: true };
 
     // Transcreve áudio via uazapi + Whisper antes de seguir o fluxo normal
