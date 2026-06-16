@@ -51,6 +51,9 @@ export class Lead {
   @Column({ name: 'classification', type: 'varchar', default: 'frio' })
   classification: LeadClassification;
 
+  @Column({ name: 'is_mql', type: 'boolean', default: false })
+  isMql: boolean;
+
   @Column({ name: 'status', type: 'varchar', default: 'novo' })
   status: LeadStatus;
 

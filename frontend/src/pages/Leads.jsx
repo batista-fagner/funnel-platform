@@ -397,9 +397,16 @@ export default function Leads() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-semibold text-slate-800 text-sm truncate">{lead.name}</p>
-                          <span className={`text-[11px] px-2 py-0.5 rounded whitespace-nowrap font-medium ${sc.className}`}>
-                            {sc.label}
-                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {lead.isMql && (
+                              <span className="text-[11px] px-2 py-0.5 rounded whitespace-nowrap font-bold bg-emerald-100 text-emerald-700">
+                                🎯 MQL
+                              </span>
+                            )}
+                            <span className={`text-[11px] px-2 py-0.5 rounded whitespace-nowrap font-medium ${sc.className}`}>
+                              {sc.label}
+                            </span>
+                          </div>
                         </div>
                         {lead.email && <p className="text-xs text-slate-500 mt-0.5 truncate">{lead.email}</p>}
                         {phone && <p className="text-xs text-slate-400 mt-0.5">{phone}</p>}
@@ -455,6 +462,11 @@ export default function Leads() {
                     <div>
                       <div className="flex items-center gap-3">
                         <h2 className="text-xl font-bold">{sel.name}</h2>
+                        {sel.isMql && (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-400 text-emerald-950">
+                            🎯 MQL
+                          </span>
+                        )}
                         <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${statusCfg.header}`}>
                           {statusCfg.label}
                         </span>

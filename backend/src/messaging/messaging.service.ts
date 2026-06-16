@@ -58,6 +58,23 @@ export class MessagingService {
     }
   }
 
+  /** Envia mensagem para um número arbitrário (ex: notificação interna), sem vínculo a lead. */
+  async sendRawMessage(phone: string, text: string): Promise<void> {
+    const number = this.normalizePhone(phone);
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${this.uazapiBaseUrl}/send/text`,
+          { number, text },
+          { headers: this.headers },
+        ),
+      );
+      this.logger.log(`Notificação enviada para ${number}`);
+    } catch (err) {
+      this.logger.error(`Erro ao enviar notificação para ${number}: ${err.message}`);
+    }
+  }
+
   async sendBulk(dto: BulkMessageDto): Promise<{ queued: number; successful: number; failed: number }> {
     const { leadIds, text, delayMin = 5, delayMax = 15 } = dto;
     let successful = 0;

@@ -1,7 +1,9 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Form } from '../common/entities/form.entity';
+import { Lead } from '../common/entities/lead.entity';
 import { LeadsService } from '../leads/leads.service';
 import { EnrichmentService } from '../enrichment/enrichment.service';
 import { FacebookService } from '../facebook/facebook.service';
@@ -33,6 +35,7 @@ export class FormsService {
     private enrichmentService: EnrichmentService,
     private facebookService: FacebookService,
     private messagingService: MessagingService,
+    private config: ConfigService,
   ) {}
 
   async findById(id: string): Promise<Form> {
@@ -53,6 +56,8 @@ export class FormsService {
 
   async capture(dto: { name: string; phone: string; email?: string; instagram?: string; revenue?: string; fbclid?: string; fbc?: string; clickId?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string; utmContent?: string; utmTerm?: string; fbp?: string; userAgent?: string; clientIp?: string }): Promise<{ success: boolean; leadId: string }> {
     const normalizedPhone = (dto.phone || '').replace(/\D/g, '');
+    const MQL_REVENUES = ['30k-100k', '100k-300k', 'acima-300k'];
+    const isMql = !!(dto.revenue && MQL_REVENUES.includes(dto.revenue));
     const lead = await this.leadsService.create({
       name: dto.name,
       phone: normalizedPhone,
@@ -60,6 +65,7 @@ export class FormsService {
       instagram: dto.instagram,
       status: 'novo',
       score: 0,
+      isMql,
       utmSource: dto.utmSource || 'leadscomia',
       utmMedium: dto.utmMedium,
       utmCampaign: dto.utmCampaign,
@@ -88,11 +94,13 @@ export class FormsService {
     );
 
     this.logger.debug(`Revenue recebido: "${dto.revenue}"`);
-    const MQL_REVENUES = ['30k-100k', '100k-300k', 'acima-300k'];
-    if (dto.revenue && MQL_REVENUES.includes(dto.revenue)) {
+    if (isMql) {
       this.logger.log(`🎯 MQL detectado! Enviando evento MQL para lead ${lead.id}`);
       this.facebookService.sendMqlEvent(lead, { fbp: dto.fbp, fbc: dto.fbc, userAgent: dto.userAgent, clientIp: dto.clientIp }).catch(err =>
         this.logger.error(`Erro ao enviar MQL event ao Facebook: ${err.message}`),
+      );
+      this.notifyMql(lead).catch(err =>
+        this.logger.error(`Erro ao notificar MQL: ${err.message}`),
       );
     }
 
@@ -115,6 +123,31 @@ export class FormsService {
 
     await this.messagingService.sendMessage({ leadId, text });
     this.logger.log(`Mensagem de faturamento enviada para lead ${leadId} (${revenue || 'sem faturamento'})`);
+  }
+
+  private readonly REVENUE_LABELS: Record<string, string> = {
+    'ate-10k': 'Até R$ 10 mil',
+    '10k-30k': 'R$ 10 mil – R$ 30 mil',
+    '30k-100k': 'R$ 30 mil – R$ 100 mil',
+    '100k-300k': 'R$ 100 mil – R$ 300 mil',
+    'acima-300k': 'Acima de R$ 300 mil',
+  };
+
+  /** Notifica no WhatsApp interno quando um lead MQL é capturado. */
+  private async notifyMql(lead: Lead): Promise<void> {
+    const phone = this.config.get('MQL_NOTIFICATION_PHONE') || '71992867765';
+    const revenue = this.REVENUE_LABELS[lead.revenueRange || ''] || lead.revenueRange || '—';
+    const linhas = [
+      '🎯 *NOVO LEAD MQL!*',
+      '',
+      `*Nome:* ${lead.name}`,
+      `*WhatsApp:* ${lead.phone}`,
+      `*Faturamento:* ${revenue}`,
+    ];
+    if (lead.instagram) linhas.push(`*Instagram:* @${lead.instagram.replace('@', '')}`);
+    if (lead.utmMedium) linhas.push(`*Conjunto:* ${lead.utmMedium}`);
+    if (lead.utmCampaign) linhas.push(`*Campanha:* ${lead.utmCampaign}`);
+    await this.messagingService.sendRawMessage(phone, linhas.join('\n'));
   }
 
   async submit(formId: string, dto: SubmitFormDto): Promise<{ success: boolean; leadId: string }> {
