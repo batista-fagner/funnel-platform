@@ -49,7 +49,9 @@ export class MessagingService {
         ),
       );
 
-      await this.leadsService.update(dto.leadId, { status: 'contatado' });
+      const history = Array.isArray(lead.aiContext) ? lead.aiContext : [];
+      const aiContext = [...history, { role: 'assistant', content: text }];
+      await this.leadsService.update(dto.leadId, { status: 'contatado', aiContext });
       this.logger.log(`Mensagem enviada para ${phone} (lead: ${lead.name})`);
       return response.data;
     } catch (err) {

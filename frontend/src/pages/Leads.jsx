@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Users, MessageCircle, Copy, CheckCircle2, Megaphone, X, Loader2,
   ExternalLink, Clock, MoreVertical, Send, Pencil, ChevronDown,
-  FileText, TrendingUp, User, ArrowDown, Trash2,
+  FileText, TrendingUp, User, ArrowDown, Trash2, MessageSquare, RefreshCw,
 } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
@@ -84,6 +84,7 @@ export default function Leads() {
   const [source, setSource] = useState('all')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const DEMO_LEAD = {
     id: 'demo-lead-1',
@@ -135,6 +136,24 @@ export default function Leads() {
     setSelectedLead(null)
     fetchLeads(1)
   }, [source])
+
+  // Enquanto o drawer de conversa está aberto, atualiza as mensagens do lead a cada 4s
+  useEffect(() => {
+    if (!chatOpen || !selectedLead || selectedLead.id === 'demo-lead-1') return
+    const id = selectedLead.id
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API}/leads/${id}`)
+        if (!res.ok) return
+        const fresh = await res.json()
+        setSelectedLead(prev => (prev && prev.id === fresh.id ? fresh : prev))
+        setLeads(prev => prev.map(l => (l.id === fresh.id ? fresh : l)))
+      } catch {
+        // silencioso — tenta de novo no próximo ciclo
+      }
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [chatOpen, selectedLead?.id])
 
   const loadMore = () => {
     const next = page + 1
@@ -341,9 +360,18 @@ export default function Leads() {
 
           {/* Título + Filtros */}
           <div className="shrink-0">
-            <h1 className="text-2xl font-bold text-slate-900">
-              Todos os Leads <span className="text-base font-normal text-slate-400 ml-2">{total}</span>
-            </h1>
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">
+                Todos os Leads <span className="text-base font-normal text-slate-400 ml-2">{total}</span>
+              </h1>
+              <button
+                onClick={() => { setPage(1); fetchLeads(1) }}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar
+              </button>
+            </div>
             <div className="flex gap-2 mt-3">
               {[
                 { id: 'all', label: 'Todos' },
@@ -497,6 +525,12 @@ export default function Leads() {
                             <MessageCircle className="w-4 h-4" /> Abrir conversa
                           </button>
                         )}
+                        <button
+                          onClick={() => setChatOpen(true)}
+                          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition"
+                        >
+                          <MessageSquare className="w-4 h-4" /> Ver conversa
+                        </button>
                         {sel.status !== 'convertido' && (
                           <button
                             onClick={() => document.getElementById('convert-section')?.scrollIntoView({ behavior: 'smooth' })}
@@ -841,6 +875,84 @@ export default function Leads() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Backdrop do drawer de conversa */}
+      <div
+        className={`fixed inset-0 bg-black/30 z-40 transition-opacity duration-300 ${chatOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setChatOpen(false)}
+      />
+
+      {/* Drawer de conversa (somente leitura) */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-[#efeae2] z-50 shadow-2xl flex flex-col transition-transform duration-300 ${chatOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-slate-200 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-9 h-9 rounded-full ${getAvatarColor(sel?.name)} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+              {getInitials(sel?.name)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-800 truncate">Conversa WhatsApp</p>
+              <p className="text-xs text-slate-400 truncate">{sel ? (formatPhone(sel.phone) || sel.name) : ''}</p>
+            </div>
+          </div>
+          <button onClick={() => setChatOpen(false)} className="text-slate-400 hover:text-slate-700 transition shrink-0">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Corpo: bolhas */}
+        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-2">
+          {(() => {
+            const messages = (Array.isArray(sel?.aiContext) ? sel.aiContext : [])
+              .filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.content)
+            if (messages.length === 0) {
+              return (
+                <div className="h-full flex items-center justify-center text-center px-6">
+                  <div>
+                    <div className="w-14 h-14 bg-slate-200/60 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <MessageSquare className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-600">Nenhuma conversa ainda</p>
+                    <p className="text-xs text-slate-400 mt-1">As mensagens trocadas com o Efraim aparecerão aqui.</p>
+                  </div>
+                </div>
+              )
+            }
+            return messages.map((m, i) => {
+              const isEfraim = m.role === 'assistant'
+              return (
+                <div key={i} className={`flex ${isEfraim ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[78%] rounded-lg px-3 py-2 shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                    isEfraim ? 'bg-[#d9fdd3] text-slate-800' : 'bg-white text-slate-800'
+                  }`}>
+                    <p className={`text-[10px] font-bold mb-0.5 ${isEfraim ? 'text-emerald-700' : 'text-violet-600'}`}>
+                      {isEfraim ? 'Efraim' : (sel?.name || 'Lead')}
+                    </p>
+                    {String(m.content)}
+                  </div>
+                </div>
+              )
+            })
+          })()}
+        </div>
+
+        {/* Footer: input desabilitado (somente leitura) */}
+        <div className="px-4 py-3 bg-white border-t border-slate-200 shrink-0">
+          <div className="flex items-center gap-2 opacity-60">
+            <input
+              type="text"
+              disabled
+              placeholder="Visualização somente leitura"
+              className="flex-1 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-500 cursor-not-allowed"
+            />
+            <button disabled className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white cursor-not-allowed shrink-0">
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

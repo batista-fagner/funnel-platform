@@ -46,10 +46,39 @@ export class EfraimController {
     if (message.fromMe || message.isGroup || message.wasSentByApi) return { ok: true };
 
     const phone: string = (body.chat?.phone ?? '').replace(/\D/g, '');
-    const text: string = message.text ?? '';
+    let text: string = message.text ?? '';
     const messageId: string = message.messageid ?? '';
+    const isAudio = message.type === 'media' && ['audio', 'ptt', 'myaudio'].includes(message.mediaType);
 
-    if (!phone || !text) return { ok: true };
+    // DEBUG TEMPORÁRIO — remover após validar
+    this.logger.log(`[DEBUG] type=${message.type} mediaType=${message.mediaType} messageType=${message.messageType} isAudio=${isAudio} text="${text}" messageId=${messageId}`);
+
+    if (!phone) return { ok: true };
+
+    // Transcreve áudio via uazapi + Whisper antes de seguir o fluxo normal
+    if (isAudio && messageId) {
+      try {
+        this.logger.log(`Áudio recebido de ${phone} — transcrevendo...`);
+        const res = await firstValueFrom(
+          this.http.post(
+            `${this.uazapiBaseUrl}/message/download`,
+            { id: messageId, transcribe: true, generate_mp3: false, return_link: false, openai_apikey: this.config.get('OPENAI_API_KEY') },
+            { headers: { token: this.uazapiToken } },
+          ),
+        );
+        text = (res.data as any).transcription ?? '';
+        if (!text) {
+          this.logger.warn(`Transcrição vazia para áudio de ${phone} — ignorando`);
+          return { ok: true };
+        }
+        this.logger.log(`Áudio de ${phone} transcrito: "${text}"`);
+      } catch (err: any) {
+        this.logger.error(`Erro ao transcrever áudio de ${phone}: ${err.message}`);
+        return { ok: true };
+      }
+    }
+
+    if (!text) return { ok: true };
 
     // Ignora mensagens antigas (> 5 min) — messageTimestamp vem em segundos do uazapi
     if (message.messageTimestamp) {
