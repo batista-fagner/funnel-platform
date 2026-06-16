@@ -139,6 +139,23 @@ export class EfraimService {
 
       const parsed = JSON.parse(jsonMatch[0]) as EfraimResponse;
       parsed.success = true;
+
+      // Lógica de encerramento automático: se estava "confirmado", conta as mensagens pós-confirmação
+      const currentStage = (lead.waStage as any) ?? 'escuta';
+      if (currentStage === 'confirmado') {
+        const newCount = (lead.waMessagesAfterConfirmed ?? 0) + 1;
+        // Força encerramento na 3ª mensagem pós-confirmação
+        if (newCount >= 3) {
+          parsed.stage = 'encerrado' as WaStage;
+          this.logger.log(`Lead ${lead.phone} encerrado automaticamente (3ª mensagem pós-confirmação)`);
+        }
+        // Passa o contador atualizado pro controller para salvar
+        (parsed as any).waMessagesAfterConfirmed = newCount;
+      } else if (currentStage !== 'confirmado' && (parsed.stage as any) === 'confirmado') {
+        // Quando muda para "confirmado", reseta o contador
+        (parsed as any).waMessagesAfterConfirmed = 0;
+      }
+
       this.logger.log(`Efraim respondeu [stage=${parsed.stage}]: ${parsed.reply}`);
       return parsed;
     } catch (err: any) {

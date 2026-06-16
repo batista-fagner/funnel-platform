@@ -166,11 +166,15 @@ export class EfraimController {
 
     // Atualiza contexto e stage no lead
     const updatedContext = this.efraimService.buildUpdatedContext(lead, text, aiResponse.reply);
-    await this.leadsService.update(lead.id, {
+    const updateData: any = {
       aiContext: updatedContext,
       waStage: aiResponse.stage,
       waLastMessageAt: new Date(),
-    });
+    };
+    if (typeof (aiResponse as any).waMessagesAfterConfirmed === 'number') {
+      updateData.waMessagesAfterConfirmed = (aiResponse as any).waMessagesAfterConfirmed;
+    }
+    await this.leadsService.update(lead.id, updateData);
 
     // Envia resposta via uazapi (silencioso se erro)
     if (aiResponse.reply) await this.sendMessage(phone, aiResponse.reply);

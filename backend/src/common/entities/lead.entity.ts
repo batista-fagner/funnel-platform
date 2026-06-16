@@ -93,6 +93,9 @@ export class Lead {
   @Column({ name: 'wa_stage', type: 'varchar', nullable: true })
   waStage?: WaStage;
 
+  @Column({ name: 'wa_messages_after_confirmed', type: 'int', default: 0 })
+  waMessagesAfterConfirmed: number;
+
   @Column({ name: 'ai_context', type: 'jsonb', nullable: true })
   aiContext?: any[];
 
