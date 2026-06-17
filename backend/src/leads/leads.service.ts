@@ -70,6 +70,32 @@ export class LeadsService {
     return new Map(leads.map(l => [l.phone, l.name]));
   }
 
+  async getStats(): Promise<{
+    total: number;
+    totalMql: number;
+    byStatus: Record<string, number>;
+    byWaStage: Record<string, number>;
+    conversionRate: number;
+    recent: Lead[];
+  }> {
+    const all = await this.leadsRepo.find({ order: { createdAt: 'DESC' } });
+    const total = all.length;
+    const totalMql = all.filter(l => l.isMql).length;
+
+    const byStatus: Record<string, number> = {};
+    const byWaStage: Record<string, number> = {};
+    for (const lead of all) {
+      byStatus[lead.status] = (byStatus[lead.status] || 0) + 1;
+      if (lead.waStage) byWaStage[lead.waStage] = (byWaStage[lead.waStage] || 0) + 1;
+    }
+
+    const convertido = byStatus['convertido'] || 0;
+    const conversionRate = total > 0 ? Math.round((convertido / total) * 1000) / 10 : 0;
+    const recent = all.slice(0, 5);
+
+    return { total, totalMql, byStatus, byWaStage, conversionRate, recent };
+  }
+
   async markAsConverted(id: string): Promise<Lead> {
     return this.update(id, { status: 'convertido' });
   }

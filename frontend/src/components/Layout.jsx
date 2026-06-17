@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -76,9 +76,40 @@ const PAGE_TITLES = {
   '/settings': 'Configurações',
 }
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+function useHeaderStats() {
+  const [leadsHoje, setLeadsHoje] = useState(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${API}/leads/stats`)
+        const data = await res.json()
+
+        // Leads criados hoje
+        const hoje = new Date()
+        hoje.setHours(0, 0, 0, 0)
+        const todayCount = (data.recent || []).filter(l =>
+          new Date(l.createdAt) >= hoje
+        ).length
+        setLeadsHoje(todayCount)
+      } catch {
+        setLeadsHoje(0)
+      }
+    }
+    fetchStats()
+    const t = setInterval(fetchStats, 60000) // atualiza a cada 1 min
+    return () => clearInterval(t)
+  }, [])
+
+  return { leadsHoje }
+}
+
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
+  const { leadsHoje } = useHeaderStats()
 
   const pageTitle = PAGE_TITLES[location.pathname] || 'Funnel Platform'
   const isActive = (path) =>
@@ -200,12 +231,10 @@ export default function Layout() {
             {/* Stats rápidas */}
             <div className="hidden lg:flex items-center gap-4 text-xs text-slate-500">
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>3 campanhas ativas</span>
-              </div>
-              <div className="flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-violet-500" />
-                <span>24 leads hoje</span>
+                <span>
+                  {leadsHoje === null ? '...' : `${leadsHoje} lead${leadsHoje !== 1 ? 's' : ''} hoje`}
+                </span>
               </div>
             </div>
 

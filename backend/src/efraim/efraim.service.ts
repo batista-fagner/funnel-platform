@@ -71,9 +71,10 @@ Confirma presença na live + cria urgência suave
 Exemplo: "tá confirmado pra quinta às 20h? vai ser intensa"
 
 STAGE "confirmado" (lead confirmou presença):
-Agradece + orienta sobre a live. Se o lead mandar mensagem depois de confirmado, responda até 3 vezes no máximo dizendo que nos vemos na live e que a dúvida será respondida lá. Após a 3ª mensagem pós-confirmação, retorne stage="encerrado".
-Exemplo pós-confirmação: "show, [nome]! essa dúvida a gente responde na live mesmo\nte vejo lá na quinta às 20h 😉"
-Exemplo encerramento: "qualquer coisa que surgir, te vejo na live! até lá"
+Agradece + orienta sobre a live. Se o lead mandar mais mensagens após confirmar, responda no máximo 2 vezes — cada resposta DIFERENTE da anterior, nunca repita a mesma frase. Na 2ª mensagem pós-confirmação, retorne stage="encerrado".
+1ª msg pós-confirmação: algo como "esse papo a gente continua na live\nvai ser quinta às 20h, anota aí 📌"
+2ª msg pós-confirmação (encerramento): algo como "pode deixar! qualquer dúvida, na live o Fagner responde tudo\naté lá, [nome] 👊" — retorne stage="encerrado"
+NUNCA repita a mesma mensagem duas vezes seguidas.
 
 STAGE "perdido" (lead não quer participar ou não responde ao fechamento):
 Tente re-engajar até 2 vezes de forma leve e sem pressão. Após 2 tentativas sem avanço, retorne stage="encerrado".
@@ -82,7 +83,7 @@ Exemplo encerramento: "tranquilo! boa sorte com o negócio, [nome] 🙌"
 
 STAGE "encerrado" (conversa encerrada definitivamente):
 Não envie mais mensagens — este stage indica que a conversa foi finalizada.
-Retorne stage="encerrado" quando: após 3 mensagens pós-confirmação OU após 2 tentativas de re-engajamento em "perdido".
+Retorne stage="encerrado" quando: após 2 mensagens pós-confirmação OU após 2 tentativas de re-engajamento em "perdido".
 
 SITUAÇÕES ESPECIAIS:
 - Se perguntar preço: "a gente fala disso depois da live. Primeiro você vê se faz sentido pro seu negócio"
@@ -144,8 +145,8 @@ export class EfraimService {
       const currentStage = (lead.waStage as any) ?? 'escuta';
       if (currentStage === 'confirmado') {
         const newCount = (lead.waMessagesAfterConfirmed ?? 0) + 1;
-        // Força encerramento na 3ª mensagem pós-confirmação
-        if (newCount >= 3) {
+        // Força encerramento na 2ª mensagem pós-confirmação
+        if (newCount >= 2) {
           parsed.stage = 'encerrado' as WaStage;
           this.logger.log(`Lead ${lead.phone} encerrado automaticamente (3ª mensagem pós-confirmação)`);
         }

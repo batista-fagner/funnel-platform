@@ -24,6 +24,11 @@ export class LeadsController {
     });
   }
 
+  @Get('stats')
+  async getStats() {
+    return this.leadsService.getStats();
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.leadsService.findById(id);
