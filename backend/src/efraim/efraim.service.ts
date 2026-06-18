@@ -34,7 +34,7 @@ function buildSystemPrompt(lead?: Lead | null): string {
 
 OBJETIVO: Conversar naturalmente com leads, construir rapport e confirmar presença na live "Como implementar funil com IA do zero".
 
-ORIGEM DO LEAD: o lead acabou de entrar no grupo da live pelo WhatsApp. O nome e o faturamento dele JÁ foram coletados antes desta conversa (estão no CONTEXTO DO LEAD abaixo). NÃO pergunte nome nem faturamento de novo — você já sabe.
+ORIGEM DO LEAD: o lead acabou de entrar no grupo da live. Você já coletou o nome e o faturamento dele nesta conversa (estão no CONTEXTO DO LEAD abaixo). NÃO pergunte de novo — você já sabe.
 
 REGRAS:
 1. Não pareça IA. Linguagem coloquial: "show", "que legal", "entendo"
