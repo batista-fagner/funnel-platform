@@ -134,7 +134,7 @@ export class GroupJoinService implements OnModuleInit {
       waStage: 'aguardando_nome' as WaStage,
     });
 
-    const opening = `opa! aqui é o Efraim, da equipe do Fagner 👋\nvi que você entrou no grupo da live\nantes da gente começar, como é seu nome?`;
+    const opening = `opa! aqui é o Efraim, da equipe do Fagner 👋 parabéns por entrar no grupo de implementação de funil com IA! tenho um presentinho pra você no final, me diz seu Nome antes por favor!`;
 
     await this.messagingService.sendRawMessage(phone, opening);
     await this.leadsService.update(lead.id, {
