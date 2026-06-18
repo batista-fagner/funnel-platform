@@ -50,7 +50,9 @@ export class GroupJoinService implements OnModuleInit {
       let buffer = '';
 
       stream.on('data', (chunk: Buffer) => {
-        buffer += chunk.toString();
+        const raw = chunk.toString();
+        this.logger.debug(`[SSE RAW] ${raw.replace(/\n/g, '\\n')}`);
+        buffer += raw;
         let idx: number;
         while ((idx = buffer.indexOf('\n')) >= 0) {
           const line = buffer.slice(0, idx).trim();
