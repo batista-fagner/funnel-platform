@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Logger } from '@nestjs/common';
+import { Controller, Post, Body, Logger, Param } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -32,6 +32,15 @@ export class EfraimController {
       config.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
     this.mediaBucket = config.get('EFRAIM_MEDIA_BUCKET') ?? 'efraim-media';
+  }
+
+  @Post('uazapi/:eventType')
+  async handleEvent(@Param('eventType') eventType: string, @Body() body: any) {
+    this.logger.log(`[UAZAPI EVENT] tipo=${eventType} body=${JSON.stringify(body)}`);
+    if (eventType === 'messages') {
+      return this.handleWhatsAppWebhook(body);
+    }
+    return { ok: true };
   }
 
   @Post('uazapi')
