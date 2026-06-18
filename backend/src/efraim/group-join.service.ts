@@ -110,9 +110,12 @@ export class GroupJoinService implements OnModuleInit {
 
   private async handleJoin(phone: string) {
     // Deduplicação em memória (SSE pode reenviar o mesmo evento)
-    if (this.recentJoins.has(phone)) return;
+    if (this.recentJoins.has(phone)) {
+      this.logger.debug(`[GROUP JOIN] ${phone} ignorado por deduplicação`);
+      return;
+    }
     this.recentJoins.add(phone);
-    setTimeout(() => this.recentJoins.delete(phone), 5 * 60 * 1000);
+    setTimeout(() => this.recentJoins.delete(phone), 30_000);
 
     // Verifica se já existe lead com esse número (variantes com/sem 9 e DDI)
     const existing = await this.findLeadByPhoneVariants(phone);
