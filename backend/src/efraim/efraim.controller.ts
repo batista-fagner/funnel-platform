@@ -51,8 +51,13 @@ export class EfraimController {
     const message = body.message;
     if (!message) return { ok: true };
 
-    // Ignora mensagens enviadas pelo bot, grupos ou duplicadas
-    if (message.fromMe || message.isGroup || message.wasSentByApi) return { ok: true };
+    // Log temporário para capturar eventos de grupo
+    if (message.isGroup) {
+      this.logger.log(`[GROUP EVENT] body=${JSON.stringify(body)}`);
+      return { ok: true };
+    }
+    // Ignora mensagens enviadas pelo bot ou duplicadas
+    if (message.fromMe || message.wasSentByApi) return { ok: true };
 
     const phone: string = (body.chat?.phone ?? '').replace(/\D/g, '');
     let text: string = message.text ?? '';
