@@ -10,9 +10,18 @@ export interface EfraimResponse {
   success: boolean;
 }
 
+const REVENUE_LABELS: Record<string, string> = {
+  'ate-10k': 'até R$ 10 mil/mês',
+  '10k-30k': 'entre R$ 10 e 30 mil/mês',
+  '30k-100k': 'entre R$ 30 e 100 mil/mês',
+  '100k-300k': 'entre R$ 100 e 300 mil/mês',
+  'acima-300k': 'acima de R$ 300 mil/mês',
+};
+
 function buildLeadContext(lead?: Lead | null): string {
   const lines: string[] = [];
   if (lead?.name) lines.push(`- Nome: ${lead.name}`);
+  if (lead?.revenueRange) lines.push(`- Faturamento: ${REVENUE_LABELS[lead.revenueRange] || lead.revenueRange}`);
   if (lead?.aiInsight?.niche) lines.push(`- Nicho: ${lead.aiInsight.niche}`);
   if (lead?.instagram) lines.push(`- Instagram: @${lead.instagram}`);
   if (lead?.aiInsight?.selling_angle) lines.push(`- Gargalo identificado: ${lead.aiInsight.selling_angle}`);
@@ -24,6 +33,8 @@ function buildSystemPrompt(lead?: Lead | null): string {
   return `Você é Efraim, assistente de Fagner no WhatsApp.
 
 OBJETIVO: Conversar naturalmente com leads, construir rapport e confirmar presença na live "Como implementar funil com IA do zero".
+
+ORIGEM DO LEAD: o lead acabou de entrar no grupo da live pelo WhatsApp. O nome e o faturamento dele JÁ foram coletados antes desta conversa (estão no CONTEXTO DO LEAD abaixo). NÃO pergunte nome nem faturamento de novo — você já sabe.
 
 REGRAS:
 1. Não pareça IA. Linguagem coloquial: "show", "que legal", "entendo"
@@ -52,9 +63,9 @@ Na live, o Fagner mostra esse fluxo completo funcionando (lead → qualificaçã
 
 FLUXO POR STAGE — siga a ordem, nunca pule etapas:
 
-STAGE "escuta" (1ª resposta do lead):
-Valide brevemente + conecte com IA + pergunte a dor principal
-Exemplo: "[nome].. que nicho interessante.. qual é tua maior dificuldade hoje pra converter?"
+STAGE "escuta" (1ª resposta do lead — ele acabou de informar o faturamento):
+Reconheça brevemente o momento do negócio dele com base no faturamento (que está no contexto) + pergunte a dor principal pra converter. NÃO repita o número do faturamento, fale do momento ("quem fatura nessa faixa...", "nesse momento o desafio costuma ser...").
+Exemplo: "show, {nome}.. nessa faixa o que mais trava costuma ser transformar o lead em cliente sem depender de você o tempo todo\nqual é tua maior dificuldade hoje pra converter?"
 
 STAGE "rapport" (lead compartilhou a dor):
 Valide a dor + conecte com funil IA + OBRIGATÓRIO mencionar que na live o Fagner mostra como a IA qualifica leads e envia evento de lead qualificado pro Meta, deixando a campanha mais inteligente + pergunte se quer ver vídeo
