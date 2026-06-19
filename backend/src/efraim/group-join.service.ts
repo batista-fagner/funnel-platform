@@ -41,6 +41,11 @@ export class GroupJoinService implements OnModuleInit {
       this.logger.warn('UAZAPI_TOKEN não configurado — SSE de grupo não iniciado');
       return;
     }
+    const enabled = this.config.get('ENABLE_GROUP_JOIN_SSE');
+    if (!enabled || enabled === 'false') {
+      this.logger.warn('ENABLE_GROUP_JOIN_SSE não ativado — SSE de grupo não iniciado (defina como "true" no Railway)');
+      return;
+    }
     this.connect();
   }
 
