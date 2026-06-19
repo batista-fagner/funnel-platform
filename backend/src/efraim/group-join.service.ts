@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { LeadsService } from '../leads/leads.service';
 import { MessagingService } from '../messaging/messaging.service';
 import { FacebookService } from '../facebook/facebook.service';
+import { TrackingService } from '../tracking/tracking.service';
 import { WaStage } from '../common/entities/lead.entity';
 
 /**
@@ -29,6 +30,7 @@ export class GroupJoinService implements OnModuleInit {
     private readonly leadsService: LeadsService,
     private readonly messagingService: MessagingService,
     private readonly facebookService: FacebookService,
+    private readonly trackingService: TrackingService,
   ) {
     this.uazapiBaseUrl = config.get('UAZAPI_BASE_URL') || 'https://free.uazapi.com';
     this.uazapiToken = config.get('UAZAPI_TOKEN') || '';
@@ -129,14 +131,22 @@ export class GroupJoinService implements OnModuleInit {
     const hasName = !!waName;
     const leadName = waName || 'Novo Lead';
 
+    // Consome UTMs do clique mais recente na LP (FIFO)
+    const utm = this.trackingService.consumeNextUtm();
+
     // Cria lead no banco
     const lead = await this.leadsService.create({
       name: leadName,
       phone,
       status: 'novo',
       score: 0,
-      utmSource: 'whatsapp-grupo',
-      utmMedium: 'grupo-live',
+      utmSource: utm?.utmSource || 'whatsapp-grupo',
+      utmMedium: utm?.utmMedium || 'grupo-live',
+      utmCampaign: utm?.utmCampaign,
+      utmContent: utm?.utmContent,
+      utmTerm: utm?.utmTerm,
+      fbclid: utm?.fbclid,
+      clickId: utm?.clickId,
       waStage: (hasName ? 'aguardando_faturamento' : 'aguardando_nome') as WaStage,
     });
 

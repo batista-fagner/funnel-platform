@@ -14,6 +14,7 @@ import { FacebookModule } from './facebook/facebook.module';
 import { InstagramAutomationModule } from './instagram-automation/instagram-automation.module';
 import { EfraimModule } from './efraim/efraim.module';
 import { CarouselModule } from './carousel/carousel.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { Carousel } from './carousel/carousel.entity';
 
 @Module({
@@ -41,6 +42,7 @@ import { Carousel } from './carousel/carousel.entity';
     InstagramAutomationModule,
     EfraimModule,
     CarouselModule,
+    TrackingModule,
   ],
 })
 export class AppModule {}
