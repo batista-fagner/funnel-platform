@@ -4,12 +4,16 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { LeadsService } from '../leads/leads.service';
 import { MessagingService } from '../messaging/messaging.service';
+import { FacebookService } from '../facebook/facebook.service';
 import { WaStage } from '../common/entities/lead.entity';
 
 /**
  * Escuta o SSE do uazapi (events=groups) e detecta quando uma pessoa entra
- * no grupo da live. Ao entrar, cria o lead (só com o número) e o Efraim inicia
- * a conversa pedindo o nome. Substitui o fluxo do formulário da landing page.
+ * no grupo da live. Ao entrar:
+ *  1. Busca o nome do WhatsApp via /contacts/info
+ *  2. Cria o lead no banco
+ *  3. Envia evento Lead pro Meta (CAPI) com telefone + nome real
+ *  4. Efraim inicia conversa (pula nome se já souber, vai direto ao faturamento)
  */
 @Injectable()
 export class GroupJoinService implements OnModuleInit {
@@ -17,7 +21,6 @@ export class GroupJoinService implements OnModuleInit {
   private readonly uazapiBaseUrl: string;
   private readonly uazapiToken: string;
   private reconnecting = false;
-  // Evita processar o mesmo Join duas vezes se o SSE reenviar
   private readonly recentJoins = new Set<string>();
 
   constructor(
@@ -25,6 +28,7 @@ export class GroupJoinService implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly leadsService: LeadsService,
     private readonly messagingService: MessagingService,
+    private readonly facebookService: FacebookService,
   ) {
     this.uazapiBaseUrl = config.get('UAZAPI_BASE_URL') || 'https://free.uazapi.com';
     this.uazapiToken = config.get('UAZAPI_TOKEN') || '';
@@ -50,9 +54,7 @@ export class GroupJoinService implements OnModuleInit {
       let buffer = '';
 
       stream.on('data', (chunk: Buffer) => {
-        const raw = chunk.toString();
-        this.logger.debug(`[SSE RAW] ${raw.replace(/\n/g, '\\n')}`);
-        buffer += raw;
+        buffer += chunk.toString();
         let idx: number;
         while ((idx = buffer.indexOf('\n')) >= 0) {
           const line = buffer.slice(0, idx).trim();
@@ -109,7 +111,6 @@ export class GroupJoinService implements OnModuleInit {
   }
 
   private async handleJoin(phone: string) {
-    // Deduplicação em memória (SSE pode reenviar o mesmo evento)
     if (this.recentJoins.has(phone)) {
       this.logger.debug(`[GROUP JOIN] ${phone} ignorado por deduplicação`);
       return;
@@ -117,24 +118,38 @@ export class GroupJoinService implements OnModuleInit {
     this.recentJoins.add(phone);
     setTimeout(() => this.recentJoins.delete(phone), 30_000);
 
-    // Verifica se já existe lead com esse número (variantes com/sem 9 e DDI)
     const existing = await this.findLeadByPhoneVariants(phone);
     if (existing) {
       this.logger.log(`Lead já existe para ${phone} (${existing.name}) — não reinicia fluxo`);
       return;
     }
 
+    // Busca nome do WhatsApp via uazapi
+    const waName = await this.fetchContactName(phone);
+    const hasName = !!waName;
+    const leadName = waName || 'Novo Lead';
+
+    // Cria lead no banco
     const lead = await this.leadsService.create({
-      name: 'Novo Lead',
+      name: leadName,
       phone,
       status: 'novo',
       score: 0,
       utmSource: 'whatsapp-grupo',
       utmMedium: 'grupo-live',
-      waStage: 'aguardando_nome' as WaStage,
+      waStage: (hasName ? 'aguardando_faturamento' : 'aguardando_nome') as WaStage,
     });
 
-    const opening = `opa! aqui é o Efraim, da equipe do Fagner 👋 parabéns por entrar no grupo de implementação de funil com IA! tenho um presentinho pra você no final, me diz seu Nome antes por favor!`;
+    // Envia evento Lead pro Meta (CAPI) com telefone + nome real
+    this.facebookService.sendLeadEvent(lead).catch((err) =>
+      this.logger.error(`Erro ao enviar Lead event ao Facebook: ${err.message}`),
+    );
+
+    // Mensagem de abertura — pula pergunta de nome se já tiver
+    const firstName = leadName.split(' ')[0];
+    const opening = hasName
+      ? `opa, ${firstName}! aqui é o Efraim, da equipe do Fagner 👋 parabéns por entrar no grupo de implementação de funil com IA! tenho um presentinho pra você no final\n\nme conta, qual a faixa de faturamento do seu negócio hoje?\n\n1 - até 10k\n2 - 10k a 30k\n3 - 30k a 100k\n4 - 100k a 300k\n5 - acima de 300k\n\npode mandar só o número`
+      : `opa! aqui é o Efraim, da equipe do Fagner 👋 parabéns por entrar no grupo de implementação de funil com IA! tenho um presentinho pra você no final, me diz seu Nome antes por favor!`;
 
     await this.messagingService.sendRawMessage(phone, opening);
     await this.leadsService.update(lead.id, {
@@ -143,7 +158,28 @@ export class GroupJoinService implements OnModuleInit {
       waLastMessageAt: new Date(),
     });
 
-    this.logger.log(`Novo lead via grupo: ${lead.id} (${phone}) — aguardando nome`);
+    this.logger.log(`Novo lead via grupo: ${lead.id} (${phone}) nome=${leadName} hasName=${hasName}`);
+  }
+
+  /** Busca o nome do contato no WhatsApp via uazapi /contacts/info */
+  private async fetchContactName(phone: string): Promise<string | null> {
+    try {
+      const normalizedPhone = phone.startsWith('55') ? phone : `55${phone}`;
+      const res = await firstValueFrom(
+        this.http.post(
+          `${this.uazapiBaseUrl}/contacts/info`,
+          { number: normalizedPhone },
+          { headers: { token: this.uazapiToken } },
+        ),
+      );
+      const data = res.data as any;
+      const name: string = data?.name || data?.pushName || data?.notify || '';
+      if (!name || name === normalizedPhone || name === phone) return null;
+      return name.trim();
+    } catch (err: any) {
+      this.logger.warn(`Não foi possível buscar nome do contato ${phone}: ${err.message}`);
+      return null;
+    }
   }
 
   private async findLeadByPhoneVariants(phone: string) {
