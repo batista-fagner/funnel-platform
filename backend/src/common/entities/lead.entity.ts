@@ -75,6 +75,12 @@ export class Lead {
   @Column({ name: 'fbclid', type: 'varchar', nullable: true })
   fbclid?: string;
 
+  @Column({ name: 'fbc', type: 'varchar', nullable: true })
+  fbc?: string;
+
+  @Column({ name: 'fbp', type: 'varchar', nullable: true })
+  fbp?: string;
+
   @Column({ name: 'click_id', type: 'varchar', nullable: true })
   clickId?: string;
 

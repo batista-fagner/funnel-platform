@@ -170,6 +170,8 @@ export class FormsService {
       utmCampaign: dto.utmCampaign,
       utmContent: dto.utmContent,
       fbclid: dto.fbclid,
+      fbc: dto.fbc,
+      fbp: dto.fbp,
       status: 'novo',
     });
 
@@ -179,7 +181,7 @@ export class FormsService {
       );
     }
 
-    this.facebookService.sendLeadEvent(lead).catch(err =>
+    this.facebookService.sendLeadEvent(lead, { fbp: lead.fbp, fbc: lead.fbc }).catch(err =>
       this.logger.error(`Erro ao enviar Lead event ao Facebook: ${err.message}`),
     );
 

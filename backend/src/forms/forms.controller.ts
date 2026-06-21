@@ -13,6 +13,8 @@ interface SubmitFormDto {
   utmCampaign?: string;
   utmContent?: string;
   fbclid?: string;
+  fbc?: string;
+  fbp?: string;
 }
 
 interface CreateFormDto {

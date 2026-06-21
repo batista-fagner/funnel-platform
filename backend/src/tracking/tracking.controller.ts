@@ -13,6 +13,8 @@ export class TrackingController {
     utmContent?: string;
     utmTerm?: string;
     fbclid?: string;
+    fbc?: string;
+    fbp?: string;
     clickId?: string;
   }) {
     this.trackingService.registerClick(body);

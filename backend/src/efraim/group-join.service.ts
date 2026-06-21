@@ -150,12 +150,14 @@ export class GroupJoinService implements OnModuleInit {
       utmContent: utm?.utmContent,
       utmTerm: utm?.utmTerm,
       fbclid: utm?.fbclid,
+      fbc: utm?.fbc,
+      fbp: utm?.fbp,
       clickId: utm?.clickId,
       waStage: (hasName ? 'aguardando_faturamento' : 'aguardando_nome') as WaStage,
     });
 
-    // Envia evento Lead pro Meta (CAPI) com telefone + nome real
-    this.facebookService.sendLeadEvent(lead).catch((err) =>
+    // Envia evento Lead pro Meta (CAPI) com telefone + nome real + cookies do Meta Pixel
+    this.facebookService.sendLeadEvent(lead, { fbp: lead.fbp, fbc: lead.fbc }).catch((err) =>
       this.logger.error(`Erro ao enviar Lead event ao Facebook: ${err.message}`),
     );
 

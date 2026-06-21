@@ -352,7 +352,7 @@ export class EfraimController {
     this.logger.log(`Faturamento coletado para ${lead.phone}: ${bucket} (MQL=${isMql})`);
 
     if (isMql) {
-      this.facebookService.sendMqlEvent(lead).catch((err) =>
+      this.facebookService.sendMqlEvent(lead, { fbp: lead.fbp, fbc: lead.fbc }).catch((err) =>
         this.logger.error(`Erro ao enviar MQL event: ${err.message}`),
       );
       this.notifyMql(lead).catch((err) =>

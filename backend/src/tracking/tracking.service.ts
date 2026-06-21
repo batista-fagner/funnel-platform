@@ -7,6 +7,8 @@ interface PendingUtm {
   utmContent?: string;
   utmTerm?: string;
   fbclid?: string;
+  fbc?: string;
+  fbp?: string;
   clickId?: string;
   createdAt: number;
 }
